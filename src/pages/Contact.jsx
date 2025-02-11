@@ -26,8 +26,7 @@ const Contact = () => {
           Contact & Suggestions
         </h1>
         <p className="text-gray-700 text-base sm:text-lg mb-4 text-center">
-          <span className="font-semibold">We value your input!</span>  
-          At <span className="font-semibold">McGulma's Pharmaceutical Dictionary</span>, we strive to provide a 
+          <span className="font-semibold">We value your input! </span>  At <span className="font-semibold">McGulma's Pharmaceutical Dictionary</span>, we strive to provide a 
           comprehensive and up-to-date reference for pharmaceutical terms.
         </p>
         <p className="text-gray-700 text-base sm:text-lg mb-4 text-center">

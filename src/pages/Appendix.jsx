@@ -11,7 +11,7 @@ const Appendix = () => {
         {/* Metric System */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold">The Metric System</h3>
-          <table className="w-full border-collapse border border-gray-300 mt-2">
+          <table className="w-full border-collapse border text-center border-gray-300 mt-2">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-2">Weight</th>
@@ -50,7 +50,7 @@ const Appendix = () => {
         {/* Volume */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold">Volume</h3>
-          <table className="w-full border-collapse border border-gray-300 mt-2">
+          <table className="w-full border-collapse text-center border border-gray-300 mt-2">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-2">Volume</th>
@@ -69,7 +69,7 @@ const Appendix = () => {
         {/* Apothecaries' System */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold">The Apothecaries' System</h3>
-          <table className="w-full border-collapse border border-gray-300 mt-2">
+          <table className="w-full border-collapse text-center border border-gray-300 mt-2">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-2">Weight</th>
@@ -96,7 +96,7 @@ const Appendix = () => {
         {/* Conversion Equivalents */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold">Conversion Equivalents</h3>
-          <table className="w-full border-collapse border border-gray-300 mt-2">
+          <table className="w-full border-collapse text-center border border-gray-300 mt-2">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-2">From</th>
@@ -132,7 +132,7 @@ const Appendix = () => {
         {/* Conversion Factors */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold">Conversion Factors for Obtaining Approximate Equivalents</h3>
-          <table className="w-full border-collapse border border-gray-300 mt-2">
+          <table className="w-full border-collapse text-center border border-gray-300 mt-2">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border border-gray-300 p-2">To Convert</th>

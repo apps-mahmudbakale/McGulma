@@ -6,6 +6,7 @@ import ContactUs from './pages/Contact'
 import Admin from './pages/Admin'
 import Navbar from './components/Navbar'
 import Appendix from './pages/Appendix'
+import Definition from './pages/Definition'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/appendix" element={<Appendix />} />
+        <Route path="/word/:word" element={<Definition />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
