@@ -21,8 +21,6 @@ const Home = () => {
       fetchWords(query);
     } else {
       setResults([]);
-      setSelectedWord(null);
-      setDefinition("");
     }
   }, [query]);
 
@@ -37,10 +35,13 @@ const Home = () => {
     } else {
       setResults(data);
     }
-  }, 200); // Faster debounce (200ms)
+  }, 200);
 
   const fetchDefinition = async (word) => {
     setSelectedWord(word);
+    setQuery(""); // Clear search input
+    setResults([]); // Clear results list
+
     const { data, error } = await supabase
       .from("words")
       .select("definition")
@@ -78,7 +79,7 @@ const Home = () => {
         </p>
 
          {/* Search Bar */}
-         <div className="relative mt-6 w-full">
+        <div className="relative mt-6 w-full">
           <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
