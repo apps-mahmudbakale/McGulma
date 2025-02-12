@@ -1,7 +1,7 @@
 import { FaSearch, FaBookmark } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import HomeLogo from "../assets/Logo2.png";
+import HomeLogo from "../assets/HomeLogo2.png";
 import { createClient } from "@supabase/supabase-js";
 import { debounce } from "lodash";
 
@@ -46,7 +46,6 @@ const Home = () => {
       .from("words")
       .select("definition")
       .eq("word", word)
-      .eq("published", true) // Only fetch published definitions
       .single();
 
     if (error) {
@@ -60,16 +59,15 @@ const Home = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
       {/* Content Container */}
-      <div className="text-center w-full max-w-2xl mt-14">
+      <div className="text-center w-full max-w-2xl">
         <img
           src={HomeLogo}
           alt="Dictionary Illustration"
-          className="max-w-full md:max-w-xs mx-auto mb-4 h-auto object-contain"
-          loading="lazy"
+          className="w-48 mx-auto mb-4"
         />
-
         <h1 className="text-3xl font-bold text-red-500 sm:text-4xl">
-          <span className="block font-bold text-2xl text-gray-600">
+          {/* McGulma’s Pharmaceutical Dictionary */}
+          <span className="block text-lg text-gray-600">
             (Lexicon Pharmaceuticae McGulmae)
           </span>
         </h1>
@@ -80,7 +78,7 @@ const Home = () => {
           2,500+ definitions
         </p>
 
-        {/* Search Bar */}
+         {/* Search Bar */}
         <div className="relative mt-6 w-full">
           <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
@@ -106,13 +104,11 @@ const Home = () => {
             ))}
           </ul>
         )}
-        {/* Definition Display */}
-        {selectedWord && (
+         {/* Definition Display */}
+         {selectedWord && (
           <div className="mt-4 bg-white shadow-md rounded-lg p-4 text-gray-800">
             <h2 className="text-2xl font-bold text-red-500">{selectedWord}</h2>
-            <p className="mt-2 text-lg">
-              {definition || "Loading definition..."}
-            </p>
+            <p className="mt-2 text-lg">{definition || "Loading definition..."}</p>
           </div>
         )}
 
@@ -134,6 +130,8 @@ const Home = () => {
           </p>
         </div>
       </div>
+
+     
     </div>
   );
 };
