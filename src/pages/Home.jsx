@@ -63,7 +63,7 @@ const Home = () => {
         <img
           src={HomeLogo}
           alt="Dictionary Illustration"
-          className="w-48 mx-auto mb-4"
+          className="w-[500px] mx-auto mb-4"
         />
         <h1 className="text-3xl font-bold text-red-500 sm:text-4xl">
           {/* McGulma’s Pharmaceutical Dictionary */}
