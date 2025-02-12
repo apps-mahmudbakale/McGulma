@@ -7,17 +7,17 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-gray-400 shadow-md">
+    <nav className="fixed top-0 w-full z-50 bg-gray-400 shadow-md">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         {/* Logo & Title Wrapper */}
-            <Link to="/" className="flex items-center space-x-2 md:space-x-4">
-              <img src={logo} alt="Logo" className="h-10 w-auto" />
-              <span className="text-blue-800 font-bold text-sm sm:text-lg md:text-xl leading-tight">
-                McGulma's <br className="block sm:hidden" /> Pharmaceutical Dictionary
-              </span>
-            </Link>
+        <Link to="/" className="flex items-center space-x-2 md:space-x-4">
+          <img src={logo} alt="Logo" className="h-10 w-auto" />
+          <span className="text-blue-800 font-bold text-sm sm:text-lg md:text-xl leading-tight">
+            McGulma's <br className="block sm:hidden" /> Pharmaceutical Dictionary
+          </span>
+        </Link>
 
-            {/* Desktop Menu */}
+        {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6">
           <Link to="/" className="text-white hover:text-gray-200">Home</Link>
           <Link to="/about" className="text-white hover:text-gray-200">About</Link>
