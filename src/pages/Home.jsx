@@ -47,7 +47,6 @@ const Home = () => {
       .from("words")
       .select("definition")
       .eq("word", word)
-      .eq("published", true)
       .single();
 
     if (error) {
@@ -57,6 +56,7 @@ const Home = () => {
       setDefinition(data.definition);
     }
   };
+  console.log(definition);
 
   return (
     <div className="flex flex-col items-center mt-[50px] justify-center min-h-screen bg-gray-100 px-4">
