@@ -7,6 +7,7 @@ import Admin from './pages/Admin'
 import Navbar from './components/Navbar'
 import Appendix from './pages/Appendix'
 import Definition from './pages/Definition'
+import Login from './pages/Login'
 
 function App() {
   return (
@@ -19,6 +20,8 @@ function App() {
         <Route path="/word/:word" element={<Definition />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/dashboard" element={<Admin />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   )

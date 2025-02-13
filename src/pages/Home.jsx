@@ -1,6 +1,5 @@
-import { FaSearch, FaBookmark } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import HomeLogo from "../assets/HomeLogo2.png";
 import { createClient } from "@supabase/supabase-js";
 import { debounce } from "lodash";
@@ -38,6 +37,8 @@ const Home = () => {
   }, 200);
 
   const fetchDefinition = async (word) => {
+    if (!word.trim()) return;
+
     setSelectedWord(word);
     setQuery(""); // Clear search input
     setResults([]); // Clear results list
@@ -46,6 +47,7 @@ const Home = () => {
       .from("words")
       .select("definition")
       .eq("word", word)
+      .eq("published", true)
       .single();
 
     if (error) {
@@ -57,7 +59,7 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
+    <div className="flex flex-col items-center mt-[50px] justify-center min-h-screen bg-gray-100 px-4">
       {/* Content Container */}
       <div className="text-center w-full max-w-2xl">
         <img
@@ -78,7 +80,7 @@ const Home = () => {
           2,500+ definitions
         </p>
 
-         {/* Search Bar */}
+        {/* Search Bar */}
         <div className="relative mt-6 w-full">
           <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
@@ -86,6 +88,11 @@ const Home = () => {
             placeholder="Enter word"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && query.trim()) {
+                fetchDefinition(query.trim());
+              }
+            }}
             className="w-full py-3 pl-12 pr-4 bg-white rounded-lg shadow-md focus:outline-none text-lg"
           />
         </div>
@@ -104,8 +111,9 @@ const Home = () => {
             ))}
           </ul>
         )}
-         {/* Definition Display */}
-         {selectedWord && (
+
+        {/* Definition Display */}
+        {selectedWord && (
           <div className="mt-4 bg-white shadow-md rounded-lg p-4 text-gray-800">
             <h2 className="text-2xl font-bold text-red-500">{selectedWord}</h2>
             <p className="mt-2 text-lg">{definition || "Loading definition..."}</p>
@@ -130,8 +138,6 @@ const Home = () => {
           </p>
         </div>
       </div>
-
-     
     </div>
   );
 };
