@@ -57,7 +57,7 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    localStorage.removeItem("user_id");
     navigate("/login");
   };
 
@@ -70,9 +70,12 @@ const Dashboard = () => {
       <div className="max-w-full mx-auto bg-white p-6 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
         <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded">Logout</button>
+
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Words List</h2>
+          <h2 className="text-lg font-semibold mb-2">Total Words: {words.length}</h2>
           <button onClick={() => setIsAddModalOpen(true)} className="mb-4 px-4 py-2 bg-blue-500 text-white rounded">+ Add Word</button>
+
           <table className="w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-200">
@@ -84,7 +87,6 @@ const Dashboard = () => {
               {currentWords.map((word) => (
                 <tr key={word.id} className="border border-gray-300">
                   <td className="p-2">{word.word}</td>
-                 
                   <td className="p-2">
                     <button onClick={() => handleViewWord(word)} className="px-3 py-1 bg-green-500 text-white rounded">View</button>
                   </td>
@@ -92,6 +94,7 @@ const Dashboard = () => {
               ))}
             </tbody>
           </table>
+
           <div className="mt-4 flex justify-center">
             <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-gray-300 rounded mx-1">Previous</button>
             <button onClick={() => setCurrentPage(currentPage + 1)} disabled={indexOfLastWord >= words.length} className="px-4 py-2 bg-gray-300 rounded mx-1">Next</button>
