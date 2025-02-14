@@ -73,8 +73,8 @@ const Home = () => {
             (Lexicon Pharmaceuticae McGulmae)
           </span>
         </h1>
-        <p className="text-xl sm:text-2xl p-4 font-medium text-gray-600">
-          Nigeria’s first pharmaceutical dictionary
+        <p className="text-xl sm:text-2xl p-4 italic font-medium text-gray-600">
+          Nigeria’s First Pharmaceutical Dictionary
         </p>
         <p className="text-xl sm:text-2xl font-medium italic text-blue-600">
           2,500+ definitions

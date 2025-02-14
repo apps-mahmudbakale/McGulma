@@ -25,7 +25,7 @@ const About = () => {
             McGulma’s Pharmaceutical Dictionary
           </h2>
           <p className="text-center text-gray-600 mt-2">
-            Kabiru Abubakar Gulma, B. Pharm, MBA, MSc. Ph.D., FRSPH<br />
+            Kabiru Abubakar Gulma, B. Pharm, MBA, M.Sc., Ph.D., FRSPH<br />
             <span className="font-semibold">Series Editor</span>
           </p>
         </div>
