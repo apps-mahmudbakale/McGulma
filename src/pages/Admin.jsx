@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
+import Swal from "sweetalert2";
 
 const supabase = createClient(
   "https://zcjxkiumbmmqeetouwrq.supabase.co",
@@ -10,14 +11,18 @@ const supabase = createClient(
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [words, setWords] = useState([]);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [definition, setDefinition] = useState("");
   const [selectedWord, setSelectedWord] = useState(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [wordsPerPage] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+  const wordsPerPage = 100; // Set the pagination limit
   const navigate = useNavigate();
+  const [totalWords, setTotalWords] = useState(0);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user_id");
@@ -27,35 +32,57 @@ const Dashboard = () => {
       setUser(storedUser);
     }
     fetchWords();
-  }, [navigate]);
+  }, [navigate, currentPage, searchTerm]);
 
   const fetchWords = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("words")
-      .select("id, word, definition, published");
-    if (error) console.error("Error fetching words:", error);
-    else setWords(data);
-  };
-
-  const handleAddWord = async () => {
-    if (!newWord || !definition) return;
-    const { error } = await supabase
-      .from("words")
-      .insert([{ word: newWord, definition, published: false }]);
-    if (!error) {
-      fetchWords();
-      setIsAddModalOpen(false);
-      setNewWord("");
-      setDefinition("");
+      .select("id, word, definition", { count: "exact" }) // Count total words
+      .order("id", { ascending: true })
+      .range((currentPage - 1) * wordsPerPage, currentPage * wordsPerPage - 1);
+  
+    if (searchTerm) {
+      query = query.ilike("word", `%${searchTerm}%`);
+    }
+  
+    const { data, error, count } = await query;
+  
+    if (error) {
+      console.error("Error fetching words:", error);
+    } else {
+      setWords(data);
+      setTotalWords(count); // Set total words
+      setTotalPages(Math.ceil(count / wordsPerPage));
     }
   };
 
-  const togglePublished = async (wordId, currentStatus) => {
-    await supabase
-      .from("words")
-      .update({ published: !currentStatus })
-      .eq("id", wordId);
-    fetchWords();
+  const handleAddOrUpdateWord = async () => {
+    if (!newWord || !definition) return;
+
+    if (isEdit && selectedWord) {
+      // Update Word
+      const { error } = await supabase
+        .from("words")
+        .update({ word: newWord, definition })
+        .eq("id", selectedWord.id);
+
+      if (!error) {
+        Swal.fire("Updated!", "Word updated successfully", "success");
+        fetchWords();
+        closeModal();
+      }
+    } else {
+      // Add Word
+      const { error } = await supabase
+        .from("words")
+        .insert([{ word: newWord, definition, published: false }]);
+
+      if (!error) {
+        Swal.fire("Added!", "New word added successfully", "success");
+        fetchWords();
+        closeModal();
+      }
+    }
   };
 
   const handleViewWord = (word) => {
@@ -63,14 +90,50 @@ const Dashboard = () => {
     setIsViewModalOpen(true);
   };
 
+  const handleDeleteWord = async (wordId) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to recover this word!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const { error } = await supabase
+          .from("words")
+          .delete()
+          .eq("id", wordId);
+
+        if (!error) {
+          Swal.fire("Deleted!", "The word has been deleted.", "success");
+          fetchWords();
+        }
+      }
+    });
+  };
+
+  const handleEditWord = (word) => {
+    setSelectedWord(word);
+    setNewWord(word.word);
+    setDefinition(word.definition);
+    setIsEdit(true);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setNewWord("");
+    setDefinition("");
+    setSelectedWord(null);
+    setIsEdit(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("user_id");
     navigate("/login");
   };
-
-  const indexOfLastWord = currentPage * wordsPerPage;
-  const indexOfFirstWord = indexOfLastWord - wordsPerPage;
-  const currentWords = words.slice(indexOfFirstWord, indexOfLastWord);
 
   return (
     <div className="min-h-screen mt-[78px] bg-gray-100 p-6">
@@ -86,10 +149,18 @@ const Dashboard = () => {
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Words List</h2>
           <h2 className="text-lg font-semibold mb-2">
-            Total Words: {words.length}
+            Total Words: {totalWords}
           </h2>
+          {/* Search Input */}
+          <input
+            type="text"
+            placeholder="Search words..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border rounded mb-3"
+          />
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => setIsModalOpen(true)}
             className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
           >
             + Add Word
@@ -103,51 +174,69 @@ const Dashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {currentWords.map((word) => (
+              {words.map((word) => (
                 <tr key={word.id} className="border border-gray-300">
                   <td className="p-2">{word.word}</td>
                   <td className="p-2">
                     <button
                       onClick={() => handleViewWord(word)}
-                      className="px-3 py-1 bg-green-500 text-white rounded"
+                      className="px-3 py-1 bg-blue-500 text-white rounded mx-1"
                     >
                       View
+                    </button>
+                    <button
+                      onClick={() => handleEditWord(word)}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded mx-1"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWord(word.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded mx-1"
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-
-          <div className="mt-4 text-center">
-            <p className="text-lg font-semibold">
-              Showing {currentWords.length} of {words.length} words
-            </p>
-
-            <div className="flex justify-center mt-2">
-              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-4 py-2 bg-gray-300 rounded mx-1"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={indexOfLastWord >= words.length}
-                className="px-4 py-2 bg-gray-300 rounded mx-1"
-              >
-                Next
-              </button>
-            </div>
+          {/* Pagination */}
+          <div className="flex justify-center mt-4">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className={`px-4 py-2 mx-1 border rounded ${
+                currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"
+              }`}
+            >
+              Previous
+            </button>
+            <span className="px-4 py-2 border rounded">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className={`px-4 py-2 mx-1 border rounded ${
+                currentPage === totalPages
+                  ? "bg-gray-300"
+                  : "bg-blue-500 text-white"
+              }`}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
 
-      {isAddModalOpen && (
+      {/* Add/Edit Word Modal */}
+      {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-[#0000007a] bg-opacity-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[700px]">
-            <h2 className="text-xl font-semibold mb-4">Add New Word</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {isEdit ? "Edit Word" : "Add New Word"}
+            </h2>
             <input
               type="text"
               placeholder="Word"
@@ -163,22 +252,22 @@ const Dashboard = () => {
             />
             <div className="flex justify-between">
               <button
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={closeModal}
                 className="px-4 py-2 bg-gray-500 text-white rounded"
               >
                 Cancel
               </button>
               <button
-                onClick={handleAddWord}
+                onClick={handleAddOrUpdateWord}
                 className="px-4 py-2 bg-blue-500 text-white rounded"
               >
-                Save
+                {isEdit ? "Update" : "Save"}
               </button>
             </div>
           </div>
         </div>
       )}
-
+      {/* View Modal */}
       {isViewModalOpen && selectedWord && (
         <div className="fixed inset-0 flex items-center justify-center bg-[#0000007a] bg-opacity-50">
           <div className="bg-white p-8 rounded-lg shadow-lg w-[500px]">
