@@ -2,11 +2,11 @@ import React from 'react';
 
 const Appendix = () => {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 mt-[43px] py-8">
       <h1 className="text-3xl font-bold text-center mb-6">Appendix</h1>
 
       <div className="bg-gray-100 p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Weights and Measures Used in Prescribing and Toxicology</h2>
+        <h2 className="text-xl font-semibold text-center mb-4">Weights and Measures Used in Prescribing and Toxicology</h2>
 
         {/* Metric System */}
         <div className="mb-6">
