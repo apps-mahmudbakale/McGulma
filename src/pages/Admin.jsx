@@ -38,7 +38,7 @@ const Dashboard = () => {
     let query = supabase
       .from("words")
       .select("id, word, definition", { count: "exact" }) // Count total words
-      .order("id", { ascending: true })
+      .order("word", { ascending: true })
       .range((currentPage - 1) * wordsPerPage, currentPage * wordsPerPage - 1);
   
     if (searchTerm) {
