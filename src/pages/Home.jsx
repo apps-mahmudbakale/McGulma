@@ -27,7 +27,6 @@ const Home = () => {
     const { data, error } = await supabase
       .from("words")
       .select("*")
-      .order("word", { ascending: true })
       .ilike("word", `%${searchTerm}%`);
 
     if (error) {

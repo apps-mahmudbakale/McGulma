@@ -1,5 +1,6 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+
 import Home from './pages/Home'
 import About from './pages/About'
 import ContactUs from './pages/Contact'
@@ -9,9 +10,23 @@ import Appendix from './pages/Appendix'
 import Definition from './pages/Definition'
 import Login from './pages/Login'
 
-function App() {
+function usePageTracking() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: location.pathname + location.search,
+      })
+    }
+  }, [location])
+}
+
+function AppRoutes() {
+  usePageTracking()
+
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -23,6 +38,14 @@ function App() {
         <Route path="/dashboard" element={<Admin />} />
         <Route path="/login" element={<Login />} />
       </Routes>
+    </>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   )
 }
