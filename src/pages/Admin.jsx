@@ -1,99 +1,99 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
 import Swal from "sweetalert2";
-
-const supabase = createClient(
-  "https://zcjxkiumbmmqeetouwrq.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjanhraXVtYm1tcWVldG91d3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NzgwODQsImV4cCI6MjA1NDU1NDA4NH0.dXF58HghMOt4Be9q51_3L8wPFLmtmVmMZWNNl9egL7Y"
-);
+import { initDb, getDb, saveDb } from "../utils/dbHelper";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const [db, setDb] = useState(null);
   const [words, setWords] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allWords, setAllWords] = useState([]);
   const [newWord, setNewWord] = useState("");
   const [definition, setDefinition] = useState("");
   const [selectedWord, setSelectedWord] = useState(null);
   const [isEdit, setIsEdit] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const wordsPerPage = 100; // Set the pagination limit
+  const wordsPerPage = 100;
   const navigate = useNavigate();
-  const [totalWords, setTotalWords] = useState(0);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user_id");
-    if (!storedUser) {
-      navigate("/login");
-    } else {
-      setUser(storedUser);
-    }
-    fetchWords();
-  }, [navigate, currentPage, searchTerm]);
+    const user = localStorage.getItem("user_id");
+    if (!user) navigate("/login");
 
-  const fetchWords = async () => {
-    let query = supabase
-      .from("words")
-      .select("id, word, definition", { count: "exact" }) // Count total words
-      .order("word", { ascending: true })
-      .range((currentPage - 1) * wordsPerPage, currentPage * wordsPerPage - 1);
-  
+    const loadDb = async () => {
+      const loadedDb = await initDb();
+      setDb(loadedDb);
+    };
+
+    loadDb();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (db) refreshWords();
+  }, [db, currentPage, searchTerm]);
+
+  const refreshWords = () => {
+    if (!db) return;
+
+    let query = "SELECT * FROM words";
+    let params = [];
+
     if (searchTerm) {
-      query = query.ilike("word", `%${searchTerm}%`);
+      query += " WHERE word LIKE ?";
+      params = [`%${searchTerm}%`];
     }
-  
-    const { data, error, count } = await query;
-  
-    if (error) {
-      console.error("Error fetching words:", error);
-    } else {
-      setWords(data);
-      setTotalWords(count); // Set total words
-      setTotalPages(Math.ceil(count / wordsPerPage));
+
+    const stmt = db.prepare(query);
+    stmt.bind(params);
+
+    const fetchedWords = [];
+    while (stmt.step()) {
+      fetchedWords.push(stmt.getAsObject());
     }
+    stmt.free();
+
+    setAllWords(fetchedWords);
+    setTotalPages(Math.ceil(fetchedWords.length / wordsPerPage));
+    const paginated = fetchedWords.slice(
+      (currentPage - 1) * wordsPerPage,
+      currentPage * wordsPerPage
+    );
+    setWords(paginated);
   };
 
   const handleAddOrUpdateWord = async () => {
-    if (!newWord || !definition) return;
+    if (!newWord || !definition || !db) return;
 
     if (isEdit && selectedWord) {
-      // Update Word
-      const { error } = await supabase
-        .from("words")
-        .update({ word: newWord, definition })
-        .eq("id", selectedWord.id);
-
-      if (!error) {
-        Swal.fire("Updated!", "Word updated successfully", "success");
-        fetchWords();
-        closeModal();
-      }
+      db.run("UPDATE words SET word = ?, definition = ? WHERE id = ?", [
+        newWord,
+        definition,
+        selectedWord.id,
+      ]);
+      Swal.fire("Updated!", "Word updated successfully", "success");
     } else {
-      // Add Word
-      const { error } = await supabase
-        .from("words")
-        .insert([{ word: newWord, definition, published: false }]);
-
-      if (!error) {
-        Swal.fire("Added!", "New word added successfully", "success");
-        fetchWords();
-        closeModal();
-      }
+      db.run("INSERT INTO words (word, definition, published) VALUES (?, ?, ?)", [
+        newWord,
+        definition,
+        0,
+      ]);
+      Swal.fire("Added!", "New word added successfully", "success");
     }
+
+    await saveDb();
+    refreshWords();
+    closeModal();
   };
 
-  const handleViewWord = (word) => {
-    setSelectedWord(word);
-    setIsViewModalOpen(true);
-  };
+  const handleDeleteWord = async (id) => {
+    if (!db) return;
 
-  const handleDeleteWord = async (wordId) => {
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to recover this word!",
+      text: "This will permanently delete the word.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -101,17 +101,17 @@ const Dashboard = () => {
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const { error } = await supabase
-          .from("words")
-          .delete()
-          .eq("id", wordId);
-
-        if (!error) {
-          Swal.fire("Deleted!", "The word has been deleted.", "success");
-          fetchWords();
-        }
+        db.run("DELETE FROM words WHERE id = ?", [id]);
+        await saveDb();
+        Swal.fire("Deleted!", "The word has been removed.", "success");
+        refreshWords();
       }
     });
+  };
+
+  const handleViewWord = (word) => {
+    setSelectedWord(word);
+    setIsViewModalOpen(true);
   };
 
   const handleEditWord = (word) => {
@@ -149,14 +149,17 @@ const Dashboard = () => {
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-2">Words List</h2>
           <h2 className="text-lg font-semibold mb-2">
-            Total Words: {totalWords}
+            Total Words: {allWords.length}
           </h2>
-          {/* Search Input */}
+
           <input
             type="text"
             placeholder="Search words..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full px-3 py-2 border rounded mb-3"
           />
           <button
@@ -201,7 +204,7 @@ const Dashboard = () => {
               ))}
             </tbody>
           </table>
-          {/* Pagination */}
+
           <div className="flex justify-center mt-4">
             <button
               disabled={currentPage === 1}
@@ -267,6 +270,7 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
       {/* View Modal */}
       {isViewModalOpen && selectedWord && (
         <div className="fixed inset-0 flex items-center justify-center bg-[#0000007a] bg-opacity-50">

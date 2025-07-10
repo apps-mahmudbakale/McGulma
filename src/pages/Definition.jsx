@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import initSqlJs from "sql.js";
 import { FaArrowLeft, FaRegBookmark, FaPlay } from "react-icons/fa";
-
-const supabase = createClient(
-  "https://zcjxkiumbmmqeetouwrq.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjanhraXVtYm1tcWVldG91d3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg5NzgwODQsImV4cCI6MjA1NDU1NDA4NH0.dXF58HghMOt4Be9q51_3L8wPFLmtmVmMZWNNl9egL7Y"
-);
 
 export default function Definition() {
   const { word } = useParams();
@@ -15,22 +10,36 @@ export default function Definition() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDefinition = async () => {
-      const { data, error } = await supabase
-        .from("words")
-        .select("*")
-        .eq("word", word)
-        .single();
+    const loadDatabase = async () => {
+      try {
+        const SQL = await initSqlJs({
+          locateFile: file => `https://sql.js.org/dist/${file}`,
+        });
 
-      if (error) {
-        console.error("Error fetching definition:", error);
-      } else {
-        setDefinition(data);
+        const response = await fetch("/dictionary.db");
+        const buffer = await response.arrayBuffer();
+        const db = new SQL.Database(new Uint8Array(buffer));
+
+        const stmt = db.prepare("SELECT * FROM words WHERE word = ?");
+        stmt.bind([word]);
+
+        if (stmt.step()) {
+          const row = stmt.getAsObject();
+          setDefinition(row);
+        } else {
+          setDefinition(null);
+        }
+
+        stmt.free();
+      } catch (err) {
+        console.error("Error loading SQLite DB:", err);
+        setDefinition(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    fetchDefinition();
+    loadDatabase();
   }, [word]);
 
   if (loading) {
@@ -46,7 +55,7 @@ export default function Definition() {
       <div className="w-full max-w-2xl p-6">
         {/* Top Icons */}
         <div className="flex justify-between items-center mb-6">
-          <FaArrowLeft  onClick={() => navigate(-1)} className="text-gray-600 cursor-pointer text-2xl" />
+          <FaArrowLeft onClick={() => navigate(-1)} className="text-gray-600 cursor-pointer text-2xl" />
           <FaRegBookmark className="text-gray-600 cursor-pointer text-2xl" />
         </div>
 
