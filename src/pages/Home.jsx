@@ -111,6 +111,24 @@ const Home = () => {
             <p className="mt-2 text-lg">{definition}</p>
           </div>
         )}
+
+        {/* Publication Info */}
+        <div className="mt-8 bg-white shadow-lg rounded-lg p-4 sm:p-6 max-w-lg mx-auto text-sm sm:text-base text-gray-700 text-center leading-relaxed">
+          <p>
+            <strong>First published in Nigeria in 2025</strong>
+          </p>
+          <p>
+            ISBN: <span className="font-medium">978-978-774-985-5</span>
+          </p>
+          <p>National Library of Nigeria Cataloguing-in-Publication Data</p>
+          <p>
+            A catalog record for this book is available from the National
+            Library of Nigeria.
+          </p>
+          <p className="mt-2 text-gray-800 font-semibold">
+            © Dr. Kabiru Abubakar Gulma, 2025. All rights reserved!
+          </p>
+        </div>
       </div>
     </div>
   );
