@@ -1,7 +1,7 @@
-import initSqlJs from 'sql.js';
 import { useEffect, useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import HomeLogo from '../assets/HomeLogo2.png'; // change as needed
+import HomeLogo from '../assets/HomeLogo2.png';
+import { initDb } from '../utils/dbHelper';
 
 const Home = () => {
   const [db, setDb] = useState(null);
@@ -13,14 +13,8 @@ const Home = () => {
   // Load SQLite database
   useEffect(() => {
     const loadDatabase = async () => {
-      const SQL = await initSqlJs({
-        locateFile: file => `https://sql.js.org/dist/${file}`
-      });
-
-      const response = await fetch("/dictionary.db");
-      const buffer = await response.arrayBuffer();
-      const db = new SQL.Database(new Uint8Array(buffer));
-      setDb(db);
+      const loadedDb = await initDb();
+      setDb(loadedDb);
     };
 
     loadDatabase();
