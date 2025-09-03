@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { initDb, getDb, saveDb } from "../utils/dbHelper";
+import { initDb, saveDb, resetDb } from "../utils/dbHelper";
 
 const Dashboard = () => {
   const [db, setDb] = useState(null);
@@ -35,63 +35,89 @@ const Dashboard = () => {
     if (db) refreshWords();
   }, [db, currentPage, searchTerm]);
 
-  const refreshWords = () => {
+  const refreshWords = async () => {
     if (!db) return;
 
-    let query = "SELECT * FROM words";
-    let params = [];
+    try {
+      // First, get the total count
+      const countStmt = db.prepare("SELECT COUNT(*) as count FROM words");
+      countStmt.step();
+      const totalCount = countStmt.getAsObject().count;
+      countStmt.free();
 
-    if (searchTerm) {
-      query += " WHERE word LIKE ?";
-      params = [`%${searchTerm}%`];
+      // Then get the filtered words
+      let query = "SELECT * FROM words";
+      let params = [];
+
+      if (searchTerm) {
+        query += " WHERE word LIKE ?";
+        params = [`%${searchTerm}%`];
+      }
+
+      query += " ORDER BY id DESC"; // Order by newest first
+
+      const stmt = db.prepare(query);
+      stmt.bind(params);
+
+      const fetchedWords = [];
+      while (stmt.step()) {
+        const row = stmt.getAsObject();
+        fetchedWords.push(row);
+      }
+      stmt.free();
+
+      console.log('Total words in DB:', totalCount);
+      console.log('Fetched words:', fetchedWords.length);
+
+      setAllWords(fetchedWords);
+      setTotalPages(Math.ceil(fetchedWords.length / wordsPerPage));
+      const paginated = fetchedWords.slice(
+        (currentPage - 1) * wordsPerPage,
+        currentPage * wordsPerPage
+      );
+      setWords(paginated);
+    } catch (error) {
+      console.error('Error refreshing words:', error);
+      Swal.fire("Error!", "Failed to refresh the word list.", "error");
     }
-
-    const stmt = db.prepare(query);
-    stmt.bind(params);
-
-    const fetchedWords = [];
-    while (stmt.step()) {
-      fetchedWords.push(stmt.getAsObject());
-    }
-    stmt.free();
-
-    setAllWords(fetchedWords);
-    setTotalPages(Math.ceil(fetchedWords.length / wordsPerPage));
-    const paginated = fetchedWords.slice(
-      (currentPage - 1) * wordsPerPage,
-      currentPage * wordsPerPage
-    );
-    setWords(paginated);
   };
 
   const handleAddOrUpdateWord = async () => {
     if (!newWord || !definition || !db) return;
 
-    if (isEdit && selectedWord) {
-      db.run("UPDATE words SET word = ?, definition = ? WHERE id = ?", [
-        newWord,
-        definition,
-        selectedWord.id,
-      ]);
-      Swal.fire("Updated!", "Word updated successfully", "success");
-    } else {
-      db.run("INSERT INTO words (word, definition, published) VALUES (?, ?, ?)", [
-        newWord,
-        definition,
-        0,
-      ]);
-      Swal.fire("Added!", "New word added successfully", "success");
-    }
+    try {
+      if (isEdit && selectedWord) {
+        const stmt = db.prepare("UPDATE words SET word = ?, definition = ? WHERE id = ?");
+        stmt.bind([newWord, definition, selectedWord.id]);
+        stmt.run();
+        stmt.free();
+        await Swal.fire("Updated!", "Word updated successfully", "success");
+      } else {
+        const stmt = db.prepare("INSERT INTO words (word, definition, published) VALUES (?, ?, ?)");
+        stmt.bind([newWord, definition, 0]);
+        stmt.run();
+        stmt.free();
+        await Swal.fire("Added!", "New word added successfully", "success");
+      }
 
-    await saveDb();
-    refreshWords();
-    closeModal();
+      await saveDb();
+      
+      // Force reload the database to ensure fresh state
+      const freshDb = await initDb();
+      setDb(freshDb);
+      
+      await refreshWords();
+      closeModal();
+    } catch (error) {
+      console.error('Error adding/updating word:', error);
+      Swal.fire("Error!", "Failed to save the word.", "error");
+    }
   };
 
   const handleDeleteWord = async (id) => {
     if (!db) return;
 
-    Swal.fire({
+    const result = await Swal.fire({
       title: "Are you sure?",
       text: "This will permanently delete the word.",
       icon: "warning",
@@ -99,14 +125,48 @@ const Dashboard = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        db.run("DELETE FROM words WHERE id = ?", [id]);
-        await saveDb();
-        Swal.fire("Deleted!", "The word has been removed.", "success");
-        refreshWords();
-      }
     });
+
+    if (result.isConfirmed) {
+      try {
+        // Execute the delete operation
+        const deleteStmt = db.prepare("DELETE FROM words WHERE id = ?");
+        deleteStmt.bind([id]);
+        deleteStmt.step();
+        deleteStmt.free();
+
+        // Save changes to IndexedDB
+        await saveDb(db);
+
+        // Reset database completely
+        const freshDb = await resetDb();
+        setDb(freshDb);
+
+        // Force refresh UI
+        setWords([]);
+        setAllWords([]);
+
+        // Show success message
+        await Swal.fire("Deleted!", "The word has been removed.", "success");
+
+        // Refresh the list after a short delay
+        setTimeout(() => {
+          refreshWords();
+        }, 100);
+      } catch (error) {
+        console.error('Error deleting word:', error);
+        await Swal.fire("Error!", "Failed to delete the word: " + error.message, "error");
+        
+        // Try to recover by resetting the database
+        try {
+          const freshDb = await resetDb();
+          setDb(freshDb);
+          refreshWords();
+        } catch (recoveryError) {
+          console.error('Recovery failed:', recoveryError);
+        }
+      }
+    }
   };
 
   const handleViewWord = (word) => {
