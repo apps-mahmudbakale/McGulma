@@ -1,2 +1,26 @@
 [build]
   node_version = "20"
+  command = "npm run build"
+  publish = "dist"
+
+[[headers]]
+  for = "/dist/*"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.mjs"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Cache-Control = "public, max-age=3600"
