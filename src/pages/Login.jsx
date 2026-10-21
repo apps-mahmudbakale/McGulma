@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import bcrypt from "bcryptjs";
 import initSqlJs from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 
 const Login = () => {
   const [db, setDb] = useState(null);
@@ -14,7 +15,7 @@ const Login = () => {
   useEffect(() => {
     const loadDatabase = async () => {
       try {
-        const SQL = await initSqlJs({ locateFile: file => `https://sql.js.org/dist/${file}` });
+        const SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
 
         const response = await fetch("/dictionary.db"); // Your DB file in /public
         const buffer = await response.arrayBuffer();
