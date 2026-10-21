@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import initSqlJs from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { FaArrowLeft, FaRegBookmark, FaPlay } from "react-icons/fa";
 
 export default function Definition() {
@@ -13,7 +14,7 @@ export default function Definition() {
     const loadDatabase = async () => {
       try {
         const SQL = await initSqlJs({
-          locateFile: file => `https://sql.js.org/dist/${file}`,
+          locateFile: () => sqlWasmUrl,
         });
 
         const response = await fetch("/dictionary.db");

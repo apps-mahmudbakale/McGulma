@@ -1,4 +1,5 @@
 import initSqlJs from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import { get, set, del } from "idb-keyval";
 
 let SQL = null;
@@ -7,7 +8,7 @@ const DB_KEY = "dictionary.sqlite";
 export async function initDb(forceReload = false) {
   if (!SQL) {
     SQL = await initSqlJs({
-      locateFile: file => `https://sql.js.org/dist/${file}`,
+      locateFile: () => sqlWasmUrl,
     });
   }
 
