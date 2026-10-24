@@ -7,7 +7,7 @@ const DB_KEY = "dictionary.sqlite";
 export async function initDb(forceReload = false) {
   if (!SQL) {
     SQL = await initSqlJs({
-      locateFile: file => `https://sql.js.org/dist/${file}`,
+      locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.15.1/dist/${file}`,
     });
   }
 

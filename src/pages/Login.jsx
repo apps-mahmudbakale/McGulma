@@ -14,7 +14,7 @@ const Login = () => {
   useEffect(() => {
     const loadDatabase = async () => {
       try {
-        const SQL = await initSqlJs({ locateFile: file => `https://sql.js.org/dist/${file}` });
+        const SQL = await initSqlJs({ locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.15.1/dist/${file}` });
 
         const response = await fetch("/dictionary.db"); // Your DB file in /public
         const buffer = await response.arrayBuffer();

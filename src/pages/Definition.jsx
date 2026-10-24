@@ -13,7 +13,7 @@ export default function Definition() {
     const loadDatabase = async () => {
       try {
         const SQL = await initSqlJs({
-          locateFile: file => `https://sql.js.org/dist/${file}`,
+          locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.15.1/dist/${file}`,
         });
 
         const response = await fetch("/dictionary.db");
