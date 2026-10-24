@@ -20,7 +20,7 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.1.5",
-    "sql.js": "^1.13.0",
+    "sql.js": "^1.15.1",
     "supabase": "^2.9.6",
     "sweetalert2": "^11.22.2",
     "tailwindcss": "^4.0.4"
